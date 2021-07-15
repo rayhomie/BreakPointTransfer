@@ -6,6 +6,7 @@
   "scripts": {
     "start": "vue-cli-service serve",
     "start:serve": "nodemon server/index.js",
+    "del": "rm -rf * server/upload",
     "lint:js": "eslint --fix",
     "lint": "eslint . --fix"
   },
