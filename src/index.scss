@@ -1,0 +1,19 @@
+.container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+
+  .upload-box {
+    width: 100%;
+    height: 50px;
+
+    .upload-input {
+      display: none;
+    }
+
+    .upload-btn {
+      width:100px;
+      height:30px;
+    }
+  }
+}
