@@ -55,7 +55,7 @@ const SIZE = 10 * 1024 * 1024; // 切片大小
 const Status = {
   wait: "wait",
   pause: "pause",
-  uploading: "uploading",
+  uploading: "uploading"
 };
 
 export default {
@@ -63,20 +63,20 @@ export default {
   filters: {
     transformByte(val) {
       return Number((val / 1024).toFixed(0));
-    },
+    }
   },
   data: () => ({
     Status,
     container: {
       file: null,
       hash: "",
-      worker: null,
+      worker: null
     },
     hashPercentage: 0,
     data: [],
     requestList: [],
     status: Status.wait,
-    fakeUploadPercentage: 0,
+    fakeUploadPercentage: 0
   }),
   computed: {
     uploadDisabled() {
@@ -88,17 +88,17 @@ export default {
     uploadPercentage() {
       if (!this.container.file || !this.data.length) return 0;
       const loaded = this.data
-        .map((item) => item.size * item.percentage)
+        .map(item => item.size * item.percentage)
         .reduce((acc, cur) => acc + cur);
       return parseInt((loaded / this.container.file.size).toFixed(2));
-    },
+    }
   },
   watch: {
     uploadPercentage(now) {
       if (now > this.fakeUploadPercentage) {
         this.fakeUploadPercentage = now;
       }
-    },
+    }
   },
   methods: {
     handlePause() {
@@ -106,7 +106,7 @@ export default {
       this.resetData();
     },
     resetData() {
-      this.requestList.forEach((xhr) => xhr?.abort());
+      this.requestList.forEach(xhr => xhr?.abort());
       this.requestList = [];
       if (this.container.worker) {
         this.container.worker.onmessage = null;
@@ -132,9 +132,9 @@ export default {
             yield self.request(list[cursor]);
           }
         }
-        yield new Promise(async (resolve) => {
+        yield new Promise(async resolve => {
           const it = uploadNext();
-          list.slice(0, num).forEach(async (option) => {
+          list.slice(0, num).forEach(async option => {
             await this.request(option);
             let finished = false;
             do {
@@ -148,7 +148,7 @@ export default {
           });
         });
       } else {
-        yield Promise.all(list.map((options) => this.request(options)));
+        yield Promise.all(list.map(options => this.request(options)));
       }
     },
     // xhr
@@ -157,24 +157,24 @@ export default {
       method = "post",
       data,
       headers = {},
-      onProgress = (e) => e,
-      requestList,
+      onProgress = e => e,
+      requestList
     }) {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         const xhr = new XMLHttpRequest();
         xhr.upload.onprogress = onProgress;
         xhr.open(method, url, true);
-        Object.keys(headers).forEach((key) =>
+        Object.keys(headers).forEach(key =>
           xhr.setRequestHeader(key, headers[key])
         );
         xhr.send(data);
-        xhr.onload = (e) => {
+        xhr.onload = e => {
           if (requestList) {
-            const xhrIndex = requestList.findIndex((item) => item === xhr);
+            const xhrIndex = requestList.findIndex(item => item === xhr);
             requestList.splice(xhrIndex, 1);
           }
           resolve({
-            data: e.target.response,
+            data: e.target.response
           });
         };
         requestList?.push(xhr);
@@ -192,11 +192,11 @@ export default {
     },
     // 计算文件分片信息
     calculateHash(fileChunkList) {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         // 利用web worker形式去写文件分片hash
         this.container.worker = new Worker("/hash.js");
         this.container.worker.postMessage({ fileChunkList });
-        this.container.worker.onmessage = (e) => {
+        this.container.worker.onmessage = e => {
           const { percentage, hash } = e.data;
           this.hashPercentage = percentage;
           if (hash) {
@@ -241,7 +241,7 @@ export default {
         hash: this.container.hash + "-" + index,
         chunk: file,
         size: file.size,
-        percentage: uploadedList.includes(index) ? 100 : 0,
+        percentage: uploadedList.includes(index) ? 100 : 0
       }));
 
       await this.uploadChunks(uploadedList);
@@ -265,7 +265,7 @@ export default {
               "/uploads",
             data: formData,
             onProgress: this.createProgressHandler(this.data[index]),
-            requestList: this.requestList,
+            requestList: this.requestList
           };
         });
       const request = this.uploadGen(requestList, 3);
@@ -286,13 +286,13 @@ export default {
           // "http://localhost:3000/merge"
           "/merge",
         headers: {
-          "content-type": "application/json",
+          "content-type": "application/json"
         },
         data: JSON.stringify({
           size: SIZE,
           fileHash: this.container.hash,
-          filename: this.container.file.name,
-        }),
+          filename: this.container.file.name
+        })
       });
       this.$message.success("上传成功");
       this.status = Status.wait;
@@ -303,20 +303,20 @@ export default {
           //  "http://localhost:3000/verify"
           "/verify",
         headers: {
-          "content-type": "application/json",
+          "content-type": "application/json"
         },
         data: JSON.stringify({
           filename,
-          fileHash,
-        }),
+          fileHash
+        })
       });
       return JSON.parse(data);
     },
     createProgressHandler(item) {
-      return (e) => {
+      return e => {
         item.percentage = parseInt(String((e.loaded / e.total) * 100));
       };
-    },
-  },
+    }
+  }
 };
 </script>
